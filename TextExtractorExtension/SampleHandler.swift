@@ -17,7 +17,7 @@ class SampleHandler: RPBroadcastSampleHandler {
     private var allTextData: [TextData] = []
     
     private var lastProcessTime = Date()
-    private let processInterval: TimeInterval = 1.0 // 1 frame per second
+    private let processInterval: TimeInterval = 0.1 // 10 frames per second
 
     override func broadcastStarted(withSetupInfo setupInfo: [String : NSObject]?) {
         // User has started the broadcast.
@@ -80,13 +80,14 @@ class SampleHandler: RPBroadcastSampleHandler {
             
             let textData = observations.compactMap { observation -> (String, Float, CGRect)? in
                 guard let topCandidate = observation.topCandidates(1).first else { return nil }
+                guard topCandidate.confidence > 0.75 else { return nil }
                 let transformedBox = observation.boundingBox.applying(CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -1))
                 return (topCandidate.string, topCandidate.confidence, transformedBox)
             }
             completion(textData)
         }
         
-        request.recognitionLevel = .fast // Use .fast for real-time processing
+        request.recognitionLevel = .accurate
         
         let requestHandler = VNImageRequestHandler(cgImage: image, options: [:])
         
